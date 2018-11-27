@@ -1,8 +1,9 @@
 import numpy
 import math
 import random
-from matplotlib import pyplot as plt
-
+from random import randint as rdi
+from matplotlib import pyplot as pl
+from fuzzyNetwork import get_aptitude
 
 def get_population(alleles, chromosomes, individuals):    
     population = numpy.random.randint(2**alleles, size=(individuals, chromosomes))
@@ -13,15 +14,15 @@ def get_population(alleles, chromosomes, individuals):
 def tournament(population, individuals, number_of_contestants):
     contestants = numpy.random.randint(individuals, size=number_of_contestants)
     winner = population[min(contestants)]
-    
+
     return winner
 
 
 def numbers_to_string(individual):
-    binary_string = ''.join([bin(item) for item in s]).replace('b','')
+    binary_string = ''.join(["{:08b}".format(item) for item in individual])
 
     return binary_string
-    
+
 
 def get_child(father, mother, population, individuals):
     cut_distance = random.randint(1,len(father)-1)
@@ -53,51 +54,16 @@ def string_to_numbers(alleles, chromosomes, individual):
 
     for i in range(chromosomes):
         numbers[i] = int(individual[i*alleles:(i+1)*alleles], 2)
-    
+
     return numbers
 
 
-def get_aptitude(individual):
-    A, B, C, D, E, F, G, H = 25, 123, 13, 15, 0.08, 80, 16, 15
-
-    #Avoid division by 0
-    for i in range(len(individual)):
-        if individual[i] == 0:
-            individual[i] = 1
-    A1, B1, C1, D1, E1, F1, G1, H1 = individual
-
-    aptitude = 0
-    #calculate difference from target with individual for every x(t) 
-    for t in range(500):
-        x = (A * math.exp(-t/B)) * (C * math.sin(t/D)) + (E * math.exp(t/F)) * (G * math.cos(t/H))
-        y = (A1 * math.exp(-t/B1)) * (C1 * math.sin(t/D1)) + ((E1/500) * math.exp(t/F1)) * (G1 * math.cos(t/H1))
-        aptitude += abs(x - y)    
-
-    return aptitude
-
-
-def graph_comparison(individual):
-    #Use to compare graphs between target and individual
-    A, B, C, D, E, F, G, H = 25, 123, 13, 15, 0.08, 80, 16, 15
-
-    for i in range(len(individual)):
-        if individual[i] == 0:
-            individual[i] = 1
-    A1, B1, C1, D1, E1, F1, G1, H1 = individual
-
-    x = [((A * math.exp(-t/B)) * (C * math.sin(t/D)) + (E * math.exp(t/F)) * (G * math.cos(t/H))) for t in range(500)]
-    y = [((A1 * math.exp(-t/B1)) * (C1 * math.sin(t/D1)) + ((E1/500) * math.exp(t/F1)) * (G1 * math.cos(t/H1))) for t in range(500)]
-
-    plt.plot(x,"blue",y,"red")
-    plt.show()
-
-
 alleles = 8
-chromosomes = 8 
-individuals = 2000
-mutation_probability = 0.015
-generations = 15
-number_of_contestants = 20
+chromosomes = 5*4 
+individuals = 1500
+mutation_probability = 0.05
+generations = 100
+number_of_contestants = int(individuals*.05)
 
 population = get_population(alleles, chromosomes, individuals)
 
@@ -116,11 +82,17 @@ for gen in range(generations):
         new_population.append([child_1, get_aptitude(child_1)])
         new_population.append([child_2, get_aptitude(child_2)])
 
-    results = sorted(new_population, key=lambda x:(x[1]))
-
+    results = sorted(new_population, key=lambda x:(x[1][0]))
+    
     print('gen:', gen)
-    print(results[0])
-    graph_comparison(results[0][0])
+    print(results[0][1])
+    
+    input_plot = [17.53, 16.94, 8.84, 12.13, 22.01, 12.65, 12.67,23.98,14.13,11.76,10.33,0,0,0]
+
+    
 
     for individual in range(individuals):
         population[individual]=results[individual][0]
+
+pl.plot(input_plot, "blue", results[0][1][1], "red")
+pl.show()
